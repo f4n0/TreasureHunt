@@ -13,7 +13,7 @@ A simple web-based system for creating and tracking progress in treasure hunts u
 
 ## Pages
 
-### 1. Admin Page (admin.html)
+### 1. Admin Page [Admin Page](https://f4n0.github.io/TreasureHunt/admin.html)
 
 A tool for treasure hunt creators to:
 - Define a treasure hunt title
@@ -21,13 +21,17 @@ A tool for treasure hunt creators to:
 - Assign unique emojis to each step
 - Generate and download QR codes for printing
 
-### 2. Tracker Page (index.html)
+[Admin Page](https://f4n0.github.io/TreasureHunt/admin.html)
+
+### 2. Tracker Page [Tracker Page](https://f4n0.github.io/TreasureHunt/)
 
 A progress tracker for participants that:
 - Displays the steps completed in the current treasure hunt
 - Updates automatically when scanning new QR codes
 - Shows completion timestamps for each step
 - Allows clearing progress for the current hunt
+
+[Tracker Page](https://f4n0.github.io/TreasureHunt/)
 
 ## How It Works
 
@@ -51,20 +55,11 @@ Each QR code contains JSON data encoded in base64 with:
 - Step name
 - Associated emoji
 
-## Installation
-
-1. Download all project files to your web server or local directory
-2. Ensure the required libraries are loaded (included via CDN):
-   - jQuery
-   - Bootstrap 5
-   - QRCode.js
-   - EmojioneArea
-
 ## Usage Instructions
 
 ### For Administrators:
 
-1. Open `admin.html` in your browser
+1. Open [Admin Page](https://f4n0.github.io/TreasureHunt/admin.html) in your browser
 2. Enter a title for your treasure hunt
 3. Create each step by specifying:
    - Step name
