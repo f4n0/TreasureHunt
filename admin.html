@@ -176,7 +176,10 @@
             };
 
             const base64Data = btoa(JSON.stringify(data));
-            const url = `${window.location.origin}/index.html?data=${encodeURIComponent(base64Data)}`;
+           var baseUrl =  window.location.origin + window.location.pathname.slice(0, window.location.pathname.lastIndexOf('/'))
+
+
+            const url = `${baseUrl}?data=${encodeURIComponent(base64Data)}`;
 
             document.getElementById('qrcode').innerHTML = "";
             new QRCode(document.getElementById('qrcode'), url);
