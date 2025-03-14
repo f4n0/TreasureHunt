@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="it">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tracker Caccia al Tesoro</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="dist/emojionearea.min.css">
+    <script>
+        function LoadStep() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const encodedData = urlParams.get('data');
+            if (encodedData) {
+                try {
+                    const decodedData = JSON.parse(atob(encodedData));
+                    const huntTitle = decodedData.huntTitle || "Caccia al Tesoro";
+                    const passo = decodedData.step;
+                    const emoji = decodeURIComponent(escape(decodedData.emoji)) || "🚀";
+
+                    // Set page title to current hunt title
+                    document.title = huntTitle;
+                    document.getElementById('huntTitle').innerText = huntTitle;
+                    
+                    // Store steps by hunt title
+                    let cacce = JSON.parse(localStorage.getItem('cacce')) || {};
+                    
+                    // Initialize the hunt if it doesn't exist
+                    if (!cacce[huntTitle]) {
+                        cacce[huntTitle] = [];
+                    }
+                    
+                    // Check if the step is already stored for this hunt
+                    if (!cacce[huntTitle].some(entry => entry.step === passo)) {
+                        cacce[huntTitle].push({ 
+                            step: passo, 
+                            emoji: emoji, 
+                            timestamp: new Date().toISOString() 
+                        });
+                        localStorage.setItem('cacce', JSON.stringify(cacce));
+                    }
+                    
+                    // Set the current hunt for display
+                    localStorage.setItem('currentHunt', huntTitle);
+                    
+                    // Display steps for the current hunt
+                    DisplayHuntSteps(huntTitle);
+                    
+                } catch (error) {
+                    console.error("Errore nella decodifica dei dati del passo", error);
+                }
+            } else {
+                // If no QR data, try to display the last scanned hunt
+                const currentHunt = localStorage.getItem('currentHunt');
+                if (currentHunt) {
+                    DisplayHuntSteps(currentHunt);
+                }
+            }
+        }
+        
+        function DisplayHuntSteps(huntTitle) {
+            if (!huntTitle) return;
+            
+            const cacce = JSON.parse(localStorage.getItem('cacce')) || {};
+            const passi = cacce[huntTitle] || [];
+            
+            // Update page title
+            document.title = huntTitle;
+            document.getElementById('huntTitle').innerText = huntTitle;
+            
+            // Sort steps by timestamp
+            passi.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+            
+            // Display steps
+            document.getElementById('listaPassi').innerHTML = passi.length > 0 ? 
+                passi.map((entry, index) => {
+                    let time = new Date(entry.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    return `<li class='list-group-item border-0 py-2'>${entry.emoji} ${entry.step} completato alle ${time}</li>`;
+                }).join('') : 
+                "<li class='list-group-item border-0 py-2'>Nessun passo completato per questa caccia</li>";
+        }
+        
+        function ClearProgress() {
+            const currentHunt = localStorage.getItem('currentHunt');
+            
+            if (currentHunt) {
+                const cacce = JSON.parse(localStorage.getItem('cacce')) || {};
+                delete cacce[currentHunt];
+                localStorage.setItem('cacce', JSON.stringify(cacce));
+                
+                // If there are other hunts, set the first one as current
+                const remainingHunts = Object.keys(cacce);
+                if (remainingHunts.length > 0) {
+                    localStorage.setItem('currentHunt', remainingHunts[0]);
+                    DisplayHuntSteps(remainingHunts[0]);
+                } else {
+                    localStorage.removeItem('currentHunt');
+                    document.getElementById('huntTitle').innerText = "Caccia al Tesoro";
+                    document.getElementById('listaPassi').innerHTML = "<li class='list-group-item border-0 py-2'>Nessuna caccia al tesoro iniziata</li>";
+                }
+            } else {
+                // If no current hunt, just clear the old format data
+                localStorage.removeItem('passi');
+                document.getElementById('listaPassi').innerHTML = "<li class='list-group-item border-0 py-2'>Nessuna caccia al tesoro iniziata</li>";
+            }
+        }
+        
+        // Migrate any old data to new format (one-time operation)
+        function MigrateOldData() {
+            const oldPassi = JSON.parse(localStorage.getItem('passi')) || [];
+            if (oldPassi.length > 0) {
+                const cacce = JSON.parse(localStorage.getItem('cacce')) || {};
+                
+                // Create a default hunt for old data
+                if (!cacce["Caccia al Tesoro"]) {
+                    cacce["Caccia al Tesoro"] = oldPassi;
+                    localStorage.setItem('cacce', JSON.stringify(cacce));
+                    localStorage.setItem('currentHunt', "Caccia al Tesoro");
+                }
+                
+                // Remove old data after migration
+                localStorage.removeItem('passi');
+            }
+        }
+        
+        window.onload = function () {
+            MigrateOldData();
+            LoadStep();
+        }
+    </script>
+    <style>
+body {
+    background-color: #f0f2f5;
+    background-image: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    padding: 20px 0;
+    min-height: 100vh;
+}
+
+.tracker-container {
+    max-width: 600px;
+    margin: 30px auto;
+    background: white;
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    border: none;
+}
+
+#huntTitle {
+    color: #3a3a3a;
+    font-weight: 600;
+    margin-bottom: 30px;
+    font-size: 2.2rem;
+    position: relative;
+    padding-bottom: 15px;
+}
+
+#huntTitle::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80px;
+    height: 3px;
+    background-color: #4e73df;
+    border-radius: 2px;
+}
+
+.list-group {
+    margin-top: 10px;
+    margin-bottom: 25px;
+}
+
+.list-group-item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    padding: 12px 15px;
+    border: none;
+    border-bottom: 1px solid #f0f0f0;
+    background-color: transparent;
+    transition: background-color 0.2s;
+}
+
+.list-group-item:last-child {
+    border-bottom: none;
+}
+
+.list-group-item:hover {
+    background-color: #f8f9fa;
+}
+
+.list-group-item .emoji {
+    font-size: 1.4rem;
+    margin-right: 10px;
+}
+
+.list-group-item .step-name {
+    font-weight: 500;
+    color: #333;
+}
+
+.list-group-item .time {
+    color: #777;
+    font-size: 0.9rem;
+    margin-left: 10px;
+}
+
+.btn-danger {
+    background-color: #e74a3b;
+    border: none;
+    padding: 12px;
+    font-size: 1.1rem;
+    font-weight: 500;
+    border-radius: 8px;
+    transition: background-color 0.3s;
+    margin-top: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.btn-danger:hover {
+    background-color: #d52a1a;
+    box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Empty state styling */
+.empty-state {
+    padding: 30px 20px;
+    color: #777;
+    font-style: italic;
+}
+
+/* Animation for new steps */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.new-step {
+    animation: fadeIn 0.5s ease-out;
+}
+
+/* Responsive adjustments */
+@media (max-width: 576px) {
+    .tracker-container {
+        padding: 20px;
+        margin-top: 20px;
+    }
+    
+    #huntTitle {
+        font-size: 1.8rem;
+    }
+    
+    .list-group-item {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 15px 10px;
+    }
+    
+    .list-group-item .time {
+        margin-left: 0;
+        margin-top: 5px;
+    }
+}
+    </style>
+</head>
+
+<body>
+    <div class="container mt-5 text-center tracker-container">
+        <h1 id="huntTitle" class="mb-4">Caccia al Tesoro</h1>
+        <ul id="listaPassi" class="list-group list-group-flush"></ul>
+        <button class="btn btn-danger" onclick="ClearProgress()">Cancella Progressi</button>
+    </div>
+</body>
+
+</html>

@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Code Generator</title>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"
+        integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <link rel="stylesheet" href="dist/emojionearea.min.css">
+    <script type="text/javascript" src="dist/emojionearea.min.js"></script>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f0f2f5;
+            background-image: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            padding: 20px 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .container {
+            max-width: 550px;
+            width: 100%;
+        }
+
+        .card {
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            border: none;
+            background-color: white;
+        }
+
+        .card h1 {
+            color: #3a3a3a;
+            font-weight: 600;
+            margin-bottom: 25px;
+            font-size: 2.2rem;
+        }
+
+        .form-label {
+            font-weight: 500;
+            color: #555;
+            margin-bottom: 6px;
+            font-size: 1rem;
+        }
+
+        .form-control {
+            border-radius: 8px;
+            padding: 12px;
+            border: 1px solid #ddd;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+            font-size: 1rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .form-control:focus {
+            border-color: #80bdff;
+            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+        }
+
+        .btn-primary {
+            background-color: #4e73df;
+            border: none;
+            padding: 12px;
+            font-size: 1.1rem;
+            font-weight: 500;
+            border-radius: 8px;
+            transition: background-color 0.3s;
+            margin-top: 10px;
+        }
+
+        .btn-primary:hover {
+            background-color: #3a5cbe;
+        }
+
+        #qrcode {
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            margin-top: 25px;
+            border: 1px solid #eee;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        #qrcode:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+        }
+
+        #qrcode img {
+            max-width: 100%;
+            height: auto;
+        }
+
+        .emojionearea {
+            border-radius: 8px !important;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+        }
+
+        .emojionearea.focused {
+            border-color: #80bdff !important;
+            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25) !important;
+        }
+
+        .download-hint {
+            color: #666;
+            font-size: 0.9rem;
+            margin-top: 15px;
+            font-style: italic;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 576px) {
+            .card {
+                padding: 20px;
+            }
+
+            .card h1 {
+                font-size: 1.8rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="card text-center">
+            <h1 class="mb-4">Generatore QR</h1>
+
+            <label for="huntTitle" class="form-label">Inserisci il titolo della Caccia al Tesoro:</label>
+            <input type="text" id="huntTitle" class="form-control mb-3" placeholder="Es: Caccia al Tesoro Estate 2025">
+
+            <label for="step" class="form-label">Inserisci il nome della tappa:</label>
+            <input type="text" id="step" class="form-control mb-3">
+
+            <label for="emoji" class="form-label">Scegli una emoji per la tappa:</label>
+            <input type="text" id="emoji" class="form-control mb-3" readonly>
+            <emoji-picker class="light"></emoji-picker>
+
+            <button class="btn btn-primary w-100" onclick="generateQR()">Genera</button>
+            <p class="mt-3">Clicca sul QR code per scaricarlo</p>
+            <div id="qrcode" class="mt-3"></div>
+        </div>
+    </div>
+
+    <script>
+        function generateQR() {
+            const huntTitle = document.getElementById('huntTitle').value;
+            const step = document.getElementById('step').value;
+            const emoji = document.getElementById('emoji').value;
+
+            if (!huntTitle) {
+                alert("Inserisci un titolo per la Caccia al Tesoro");
+                return;
+            }
+
+            if (!step || !emoji) {
+                alert("Inserisci un nome e scegli un'emoji");
+                return;
+            }
+
+            const data = {
+                huntTitle,
+                step,
+                emoji: unescape(encodeURIComponent(emoji))
+            };
+
+            const base64Data = btoa(JSON.stringify(data));
+            const url = `${window.location.origin}/index.html?data=${encodeURIComponent(base64Data)}`;
+
+            document.getElementById('qrcode').innerHTML = "";
+            new QRCode(document.getElementById('qrcode'), url);
+        }
+
+        $("#emoji").emojioneArea({
+            pickerPosition: "bottom",
+            tonesStyle: "radio"
+        });
+
+        $(document).on("click", "#qrcode img", function () {
+            const huntTitle = document.getElementById('huntTitle').value;
+            const stepName = document.getElementById('step').value;
+            const fileName = `${huntTitle}-${stepName}`.replace(/[^a-z0-9]/gi, '_');
+
+            const a = document.createElement('a');
+            a.href = this.src;
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        });
+    </script>
+</body>
+
+</html>
